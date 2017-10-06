@@ -16,8 +16,28 @@ def forward_checking(state, verbose=False):
         return False
 
     # Add your forward checking logic here.
+    cur_var = state.get_current_variable()
+    cur_val = None
     
-    raise NotImplementedError
+    if cur_var is not None:
+       cur_val = cur_var.get_assigned_value()
+       
+    cons_list = state.get_constraints_by_name(cur_var)
+    
+    for con in cons_list:
+        
+        connect_var = state.get_variable_by_name(con.get_variable_j_name())
+            
+        for val in connect_var.get_domain():
+            
+            if not con.check(state,cur_val,val):
+                connect_var.reduce_domain(val)
+                
+            if len(connect_var.get_domain()) == 0:
+                return False
+    
+    return True
+        
 
 # Now Implement forward checking + (constraint) propagation through
 # singleton domains.
@@ -26,9 +46,45 @@ def forward_checking_prop_singleton(state, verbose=False):
     fc_checker = forward_checking(state, verbose)
     if not fc_checker:
         return False
-
     # Add your propagate singleton logic here.
-    raise NotImplementedError
+    vars_dom_1 = list()
+    
+    for var in state.get_all_variables():
+    
+        if var.domain_size() == 1:
+            vars_dom_1.append(var)
+    
+    visited_sing = list()
+    
+    while len(vars_dom_1) >0 :
+        var = vars_dom_1.pop()
+        x_val = var.get_domain()[0]
+        visited_sing.append(var)
+        
+        for con in state.get_constraints_by_name(var.get_name()):
+            var_y = state.get_variable_by_name(con.get_variable_j_name())
+            
+            for y_val in var_y.get_domain():
+                
+                if not con.check(state,x_val,y_val):
+                    var_y.reduce_domain(y_val)
+                
+                if len(var_y.get_domain()) == 0:
+                    return False
+                    
+            can_add = var_y not in visited_sing and var_y not in vars_dom_1
+
+            if len(var_y.get_domain()) == 1 and can_add:
+                vars_dom_1.append(var_y)
+        
+    return True
+            
+        
+        
+        
+        
+        
+    
 
 ## The code here are for the tester
 ## Do not change.
@@ -132,9 +188,9 @@ old_senator_classified = limited_house_classifier(last_senate_people, last_senat
 
 
 ## The standard survey questions.
-HOW_MANY_HOURS_THIS_PSET_TOOK = ""
-WHAT_I_FOUND_INTERESTING = ""
-WHAT_I_FOUND_BORING = ""
+HOW_MANY_HOURS_THIS_PSET_TOOK = "7.5"
+WHAT_I_FOUND_INTERESTING = "the supervised learning"
+WHAT_I_FOUND_BORING = "nothing"
 
 
 ## This function is used by the tester, please don't modify it!
