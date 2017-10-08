@@ -17,12 +17,15 @@ def forward_checking(state, verbose=False):
 
     # Add your forward checking logic here.
     cur_var = state.get_current_variable()
+    
+    if not cur_var:
+        return True
+    
     cur_val = None
     
-    if cur_var is not None:
-       cur_val = cur_var.get_assigned_value()
+    cur_val = cur_var.get_assigned_value()
        
-    cons_list = state.get_constraints_by_name(cur_var)
+    cons_list = state.get_constraints_by_name(cur_var.get_name())
     
     for con in cons_list:
         
@@ -79,12 +82,6 @@ def forward_checking_prop_singleton(state, verbose=False):
         
     return True
             
-        
-        
-        
-        
-        
-    
 
 ## The code here are for the tester
 ## Do not change.
@@ -126,7 +123,16 @@ senate_group1, senate_group2 = crosscheck_groups(senate_people)
 
 def euclidean_distance(list1, list2):
     # this is not the right solution!
-    return hamming_distance(list1, list2)
+    assert isinstance(list1, list)
+    assert isinstance(list2, list)
+
+    dist = 0
+
+    # 'zip' is a Python builtin, documented at
+    # <http://www.python.org/doc/lib/built-in-funcs.html>
+    for item1, item2 in zip(list1, list2):
+        dist += (item1-item2)**2
+    return math.sqrt(dist)
 
 #Once you have implemented euclidean_distance, you can check the results:
 #evaluate(nearest_neighbors(euclidean_distance, 1), senate_group1, senate_group2)
@@ -145,8 +151,36 @@ my_classifier = nearest_neighbors(hamming_distance, 1)
 ## which should lead to simpler trees.
 
 def information_disorder(yes, no):
-    return homogeneous_disorder(yes, no)
-
+    
+    count_yes = float(len(yes))
+    count_no = float(len(no))
+    total = count_yes + count_no
+    
+    return (count_no/total)*log(count_no,no) + (count_yes/total)*log(count_yes,yes)
+    
+def log(count, data):
+    # case if no uncertainty
+    if homogeneous_value(data):
+        return 0
+    
+    separated_point = {}
+    
+    for point in data:
+        
+        if point in separated_point:
+            separated_point[point]+=1
+            
+        else:
+            separated_point[point]=1
+        
+    result = 0
+    
+    for point,pcount in separated_point.iteritems():
+        pb = float(pcount)/float(count)
+        result += -(pb)*math.log(pb,2)
+        
+    return result
+    
 #print CongressIDTree(senate_people, senate_votes, information_disorder)
 #evaluate(idtree_maker(senate_votes, homogeneous_disorder), senate_group1, senate_group2)
 
@@ -175,21 +209,21 @@ def limited_house_classifier(house_people, house_votes, n, verbose = False):
                                    
 ## Find a value of n that classifies at least 430 representatives correctly.
 ## Hint: It's not 10.
-N_1 = 10
+N_1 = 45
 rep_classified = limited_house_classifier(house_people, house_votes, N_1)
 
 ## Find a value of n that classifies at least 90 senators correctly.
-N_2 = 10
+N_2 = 70
 senator_classified = limited_house_classifier(senate_people, senate_votes, N_2)
 
 ## Now, find a value of n that classifies at least 95 of last year's senators correctly.
-N_3 = 10
+N_3 = 23
 old_senator_classified = limited_house_classifier(last_senate_people, last_senate_votes, N_3)
 
 
 ## The standard survey questions.
 HOW_MANY_HOURS_THIS_PSET_TOOK = "7.5"
-WHAT_I_FOUND_INTERESTING = "the supervised learning"
+WHAT_I_FOUND_INTERESTING = "info disord"
 WHAT_I_FOUND_BORING = "nothing"
 
 
