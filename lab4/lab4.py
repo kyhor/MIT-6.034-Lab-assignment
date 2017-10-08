@@ -156,9 +156,9 @@ def information_disorder(yes, no):
     count_no = float(len(no))
     total = count_yes + count_no
     
-    return (count_no/total)*log(count_no,no) + (count_yes/total)*log(count_yes,yes)
+    return (count_no/total)*uncertainty(count_no,no) + (count_yes/total)*uncertainty(count_yes,yes)
     
-def log(count, data):
+def uncertainty(count, data):
     # case if no uncertainty
     if homogeneous_value(data):
         return 0
